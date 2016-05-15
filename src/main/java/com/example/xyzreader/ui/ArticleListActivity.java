@@ -8,14 +8,17 @@ import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -45,8 +48,6 @@ public class ArticleListActivity extends AppCompatActivity implements LoaderMana
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        mToolbar.setTitle(getResources().getString(R.string.app_name));
-
 
         //final View toolbarContainerView = findViewById(R.id.toolbar_container);
 
@@ -134,8 +135,15 @@ public class ArticleListActivity extends AppCompatActivity implements LoaderMana
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    /*startActivity(new Intent(Intent.ACTION_VIEW,
+                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));*/
+                    Intent intent = new Intent(Intent.ACTION_VIEW,
+                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition())));
+                    intent.putExtra("photo_url",vh.getPhotoUrl());
+
+                    ActivityOptionsCompat options = ActivityOptionsCompat.
+                            makeSceneTransitionAnimation(ArticleListActivity.this, view.findViewById(R.id.thumbnail), "photo");
+                    startActivity(intent, options.toBundle());
                 }
             });
             return vh;
@@ -158,12 +166,14 @@ public class ArticleListActivity extends AppCompatActivity implements LoaderMana
                     ImageLoaderHelper.getInstance(ArticleListActivity.this).getImageLoader());*/
 
             Glide.with(ArticleListActivity.this)
-                    .load(mCursor.getString(ArticleLoader.Query.THUMB_URL))
+                    .load(mCursor.getString(ArticleLoader.Query.PHOTO_URL))
                     .asBitmap()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .fitCenter()
                     .placeholder(R.color.photo_placeholder)
                     .into(holder.thumbnailView);
+
+            holder.setPhotoUrl(mCursor.getString(ArticleLoader.Query.PHOTO_URL));
 
             holder.thumbnailView.setAspectRatio(mCursor.getFloat(ArticleLoader.Query.ASPECT_RATIO));
         }
@@ -179,6 +189,15 @@ public class ArticleListActivity extends AppCompatActivity implements LoaderMana
         public TextView titleView;
         public TextView subtitleView;
         private LinearLayout titleLayout;
+        private String photoUrl;
+
+        public void setPhotoUrl(String photoUrl) {
+            this.photoUrl = photoUrl;
+        }
+
+        public String getPhotoUrl() {
+            return photoUrl;
+        }
 
         public ViewHolder(View view) {
             super(view);
@@ -188,4 +207,5 @@ public class ArticleListActivity extends AppCompatActivity implements LoaderMana
             titleLayout = (LinearLayout) view.findViewById(R.id.title_layout);
         }
     }
+
 }
